@@ -1,0 +1,50 @@
+import numpy as np
+import os
+import pybullet as p
+import random
+from cliport.tasks import primitives
+from cliport.tasks.grippers import Spatula
+from cliport.tasks.task import Task
+from cliport.utils import utils
+import numpy as np
+from cliport.tasks.task import Task
+from cliport.utils import utils
+
+class BuildCircle(Task):
+    """Pick up six blocks of different colors (red, blue, green, yellow, orange, and purple) 
+    and place them on a tabletop in a circle arrangement. The arrangement should start with 
+    red at the top and continue clockwise in this order: blue, green, yellow, orange, and finally purple."""
+
+    def __init__(self):
+        super().__init__()
+        self.max_steps = 20
+        self.lang_template = "place the {color} block at the {position} of the circle"
+        self.task_completed_desc = "done building circle."
+        self.colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple']
+        self.positions = ['top', 'top right', 'bottom right', 'bottom', 'bottom left', 'top left']
+        self.additional_reset()
+
+    def reset(self, env):
+        super().reset(env)
+
+        # Add blocks.
+        block_size = (0.04, 0.04, 0.04)
+        block_urdf = 'block/block.urdf'
+        blocks = []
+        for i in range(6):
+            block_pose = self.get_random_pose(env, block_size)
+            block_id = env.add_object(block_urdf, block_pose, color=utils.COLORS[self.colors[i]])
+            blocks.append(block_id)
+
+        # Define target poses for the blocks in a circle arrangement.
+        radius = 0.1
+        center = (0.5, 0.5, 0)
+        angles = np.linspace(0, 2*np.pi, 7)[:-1]
+        targ_poses = [(center[0] + radius*np.cos(angle), center[1] + radius*np.sin(angle), block_size[2]/2) for angle in angles]
+        targ_poses = [(pose, (0, 0, 0, 1)) for pose in targ_poses]  # add default quaternion for orientation
+
+        # Add goals.
+        for i in range(6):
+            language_goal = self.lang_template.format(color=self.colors[i], position=self.positions[i])
+            self.add_goal(objs=[blocks[i]], matches=np.ones((1, 1)), targ_poses=[targ_poses[i]], replace=False,
+                          rotations=False, metric='pose', params=None, step_max_reward=1/6, language_goal=language_goal)

@@ -1,0 +1,45 @@
+You are an AI in robot simulation code and task design. I will provide you some example tasks, code implementation, and some guidelines for how to generate tasks and then you will help me generate a new task. My goal is to design diverse and feasible tasks for tabletop manipulation. I will first ask you to describe the task in natural languages and then will let you write the code for it. 
+
+=========
+Here are all the assets. Use only these assets in the task and code design. 
+"""
+insertion/:
+ell.urdf  fixture.urdf
+
+bowl/:
+bowl.urdf
+
+box/:
+box-template.urdf
+
+stacking/:
+block.urdf  stand.urdf
+
+zone/:
+zone.obj  zone.urdf
+
+pallet/:
+pallet.obj  pallet.urdf
+
+ball/:
+ball-template.urdf
+
+cylinder/:
+cylinder-template.urdf
+
+bowl/:
+bowl.urdf
+
+# assets not for picking
+corner/:
+corner-template.urdf
+
+line/:
+single-green-line-template.urdf
+
+container/:
+container-template.urdf
+"""
+
+=========
+Now please describe the new task in natural languages and explain its novelty and challenges. Format the answer in a python dictionary with keys "task-name" and value type string, "task-description" (one specific sentence) and value type string, and "assets-used" and value type list of strings. 

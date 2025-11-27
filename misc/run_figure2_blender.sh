@@ -1,0 +1,10 @@
+python cliport/demos.py n=3 task=build-bridge mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=block_on_cylinder_on_pallet mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=build-two-circles mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=Four_corner_pyramid_challenge mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=align_cylinders_in_zones mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=build_car mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=construct_corner_blocks mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=color_ordered_insertion mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=align_pair_colored_blocks_along_line mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
+python cliport/demos.py n=3 task=palletizing_boxes mode=test disp=False record.save_video=True +regenerate_data=True record.add_text=True +record.blender_render=True ;
