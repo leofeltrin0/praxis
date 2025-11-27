@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/gensim/sim_runner.py", line 273, in simulate_task
+    task, dataset, env, expert = self.setup_env()
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/gensim/sim_runner.py", line 199, in setup_env
+    env = Environment(
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/cliport/environments/environment.py", line 76, in __init__
+    self.position_bounds = gym.spaces.Box(
+  File "/home/baochen/anaconda3/envs/Metaworld/lib/python3.8/site-packages/gym/spaces/box.py", line 33, in __init__
+    assert np.isscalar(low) and np.isscalar(high), 'box requires scalar bounds. '
+AssertionError: box requires scalar bounds. 

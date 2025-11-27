@@ -1,0 +1,5 @@
+=========
+Please describe the task "TASK_NAME_TEMPLATE" in natural languages and format the answer in a python dictionary with keys "task-name" and value type string, "task-description" (one specific sentence) and value type string, and "assets-used" and value type list of strings.
+
+=========
+Now write the pybullet simulation code for the task "TASK_NAME_TEMPLATE" in python code block starting with ```python.  

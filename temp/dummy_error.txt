@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/gensim/sim_runner.py", line 266, in simulate_task
+    obs = env.reset()
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/cliport/environments/environment.py", line 281, in reset
+    self.task.reset(self)
+  File "<string>", line 28, in reset
+TypeError: __init__() takes 1 positional argument but 2 were given

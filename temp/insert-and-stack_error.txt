@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/gensim/sim_runner.py", line 266, in simulate_task
+    obs = env.reset()
+  File "/home/baochen/Desktop/projects/GPT-CLIPort/cliport/environments/environment.py", line 281, in reset
+    self.task.reset(self)
+  File "<string>", line 31, in reset
+AttributeError: 'InsertAndStack' object has no attribute 'color_random_bright'

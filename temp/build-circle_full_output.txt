@@ -1,0 +1,966 @@
+
+
+================= Task and Asset Design!
+
+>>> Prompt: 
+You are an AI in robot simulation code and task design. I will provide you some example tasks, code implementation, and some guidelines for how to generate tasks and then you will help me generate a new task `build circle`. My goal is to design creative and feasible tasks for tabletop manipulation. I will first ask you to describe the task in natural languages and then will let you write the code for it. 
+
+=========
+Here are all the assets. Please try to come up with tasks using only these assets. 
+"""
+- stacking: ['stacking/block.urdf', 'stacking/stand.urdf']
+- corner: ['corner/corner-template.urdf']
+- ball: ['ball/ball-template.urdf', 'ball/ball.urdf']
+- sphere: ['sphere/sphere.urdf', 'sphere/sphere-template.urdf']
+- zone: ['zone/zone.urdf', 'zone/zone.obj']
+- block: ['block/block.urdf', 'block/block_for_anchors.urdf', 'block/small.urdf']
+- pallet: ['pallet/pallet.urdf', 'pallet/pallet.obj']
+- cylinder: ['cylinder/cylinder-template.urdf']
+- container: ['container/container-template.urdf']
+- bowl: ['bowl/bowl.urdf']
+- square: ['square/square-template.urdf']
+- box: ['box/box-template.urdf']
+- line: ['line/line-template.urdf']
+- insertion: ['insertion/ell.urdf', 'insertion/fixture.urdf']
+
+
+
+"""
+
+There are certain rules on the asset usage.
+1. Sweeping piles task must have small blocks `block/small.urdf` and zones `zone.urdf`. Only the piles can be swept in all assets
+2. Insertion tasks must have `insertion/ell.urdf` and `insertion/fixture.urdf`. Only the fixture can be inserted in all assets.
+
+
+=========
+Here are some examples of good tasks. Try to be creative and high standard, and avoid overlapping with these tasks. 
+
+- insert-ell-in-fixture: {'task-name': 'insert-ell-in-fixture', 'task-description': 'Pick up an Ell shaped block and insert it into a fixture on the tabletop.', 'assets-used': ['insertion/ell.urdf', 'insertion/fixture.urdf']}
+- stack-blocks-in-container: {'task-name': 'stack-blocks-in-container', 'task-description': 'Pick up five blocks of different colors (red, blue, green, yellow, and orange) and stack them in a container in a specific sequence. The bottom of the stack should start with a red block followed by a blue, green, yellow and finally an orange block at the top.', 'assets-used': ['block/block.urdf', 'container/container-template.urdf']}
+- sorting-blocks-into-pallets: {'task-name': 'sorting-blocks-into-pallets', 'task-description': 'Pick up blocks of four different colors (red, blue, green, yellow) and place them into four separate pallets of matching color. The pallets are placed in a row and the blocks are scattered randomly on the table.', 'assets-used': ['block/block.urdf', 'pallet/pallet.urdf']}
+- color-ordered-container-arrangement: {'task-name': 'color-ordered-container-arrangement', 'task-description': 'On the tabletop, there are six containers and six blocks of different colors (red, blue, green, yellow, orange, purple). The task is to pick up each block and place it into a container of the same color, then arrange the containers in a line in the following color order: red, blue, green, yellow, orange, and purple.', 'assets-used': ['block/block.urdf', 'container/container-template.urdf']}
+- color-coordinated-cylinder-pyramid: {'task-name': 'color-coordinated-cylinder-pyramid', 'task-description': 'Construct a pyramid on a pallet using four cylinders of different colors (red, blue, green, and yellow). The first level should consist of a red cylinder and a blue cylinder side by side. The second level should consist of a green cylinder placed on top of the red and blue cylinders. The third and final level should consist of a yellow cylinder placed on top of the green cylinder. The challenge lies in the precise placement of cylinders, maintaining the balance of the structure, and correct color arrangement.', 'assets-used': ['cylinder/cylinder-template.urdf', 'pallet/pallet.urdf']}
+- insert-ell-along-square-path: {'task-name': 'insert-ell-along-square-path', 'task-description': 'On the tabletop, there is a square path marked by small blocks. Along the path, there are four colored ell-shaped blocks (red, blue, green, and yellow) and four fixtures of matching colors. The task is to pick up each ell block and insert it into the fixture of the same color. However, the robot must move each ell block along the marked square path to reach the fixture. The task is challenging because it requires precise navigation along the path, color coordination, and insertion accuracy.', 'assets-used': ['block/small.urdf', 'insertion/ell.urdf', 'insertion/fixture.urdf']}
+- color-coordinated-zone-arrangement: {'task-name': 'color-coordinated-zone-arrangement', 'task-description': 'On the tabletop, there are nine blocks of three different colors (three red, three blue, and three green) and three pallets of matching colors (one red, one blue, one green). The task is to pick up each block and place it on the pallet of the same color, arranging the blocks on each pallet in a line. However, there are a few small blocks randomly scattered on the tabletop, which the robot has to navigate around without knocking them over while transporting the blocks to the corresponding pallets. The challenge lies in the precise navigation, placement of the blocks, color matching, and maintaining the balance on the pallets.', 'assets-used': ['block/block.urdf', 'pallet/pallet.urdf', 'block/small.urdf']}
+- color-coded-blocks-on-corner: {'task-name': 'color-coded-blocks-on-corner', 'task-description': 'On a tabletop, there are four blocks of different colors (red, blue, green, and yellow) and a corner structure. The task involves picking up each block and placing it in the corner structure in a specific color sequence: from left to right, place red, blue, green, and finally yellow. The blocks must be arranged such that they form a straight line along the corner. The challenge lies in the precise placement, color coordination, and maintaining the balance of the blocks along the corner.', 'assets-used': ['block/block.urdf', 'corner/corner-template.urdf']}
+- stack-three-layer-red-wall: {'task-name': 'block-on-cylinder-on-pallet', 'task-description': 'On the tabletop, there are three cylinders of different colors (red, blue, and green) and three blocks of the same colors. The task involves picking up each block and placing it on the corresponding colored cylinder, which are located in specific positions on a pallet. Starting with the red block and cylinder, followed by blue and finally green. The challenge lies in the precise placement of the blocks on the cylinders, while maintaining color coordination.', 'assets-used': ['block/block.urdf', 'cylinder/cylinder-template.urdf', 'pallet/pallet.urdf']}
+- align-rope-along-line: {'task-name': 'align-rope-along-line', 'assets-used': ['line/line-template.urdf'], 'task-description': 'Align a deformable rope along a straight line marked on the tabletop.'}
+
+
+
+
+
+=========
+Here are some bad example task instances with reasons.
+{
+    "task_name": "sort-color-blocks",
+    "task_descriptions": "Pick up differently colored blocks and place them into separate bowls of matching color."
+    "assets-used": ["bowl.urdf", "box/box-template.urdf],
+}
+reasons: not interesting because it overlaps with the current task `put-block-in-bowl`.
+
+{
+    "task-name": "guided-ball-maze",
+    "task-description": "Navigate a small ball through a maze by tilting the maze board to reach the target zone.",
+    "assets-used": ["zone-template.urdf", "square-template.urdf", "ball.urdf", "maze.urdf"],
+}
+reasons: the language descriptions are too ambiguous. Navigation is also hard to complete. Also maze.urf does not exist.
+
+{
+    "task-name": "insert_cylinder_in_sphere",
+    "task-description": "Pick up the cylinder and insert it into the sphere with an opening on top.",
+    "assets-used": ["cylinder/cylinder-template.urdf", "sphere/sphere-template.urdf"],
+}
+reasons: this task does not make sense. The sphere does not have an opening on top, and you cannot insert a cylinder into a sphere. Similarly you cannot create task like `insert-ball-into-cylinder`.
+
+{
+    "task-name": "ball-box-obstacle-course",
+    "task-description": "Navigate a ball through an obstacle course created by randomly placed boxes and finally place it inside a container.",
+    "assets-used": ["ball/ball-template.urdf", "box/box-template.urdf", "container/container-template.urdf"]
+}
+reasons: Navigate the ball is not related to tabletop manipulation tasks.
+
+{
+    "task-name": "ball-in-box",
+    "task-description": "Use a cable to guide a ball into an open box.",
+    "assets-used": ["cable/cable.urdf", "ball/ball-template.urdf", "box/box-template.urdf"]
+}
+reasons: This task is too hard since it involves interaction of the cable and the ball and cannot be easily completed.
+
+{
+    "task-name": "ball-in-container",
+    "task-description": "Use the spatula to lift a ball over a wall of boxes and drop it into a container.",
+    "assets-used": ["ball/ball-template.urdf", "box/box-template.urdf", "container/container-template.urdf"]
+}
+reasons: The only action primitives as pick and place. One cannot use a spatula to lift an object.
+
+{
+    "task-name": "line-ball-sorting",
+    "task-description": "Move balls of different colors along a single green line, placing each ball in a designated colored box at the end of the line. The challenge includes precision in maintaining the ball on the line and the correct identification of the box color corresponding to each ball.",
+    "assets-used": ["ball/ball-template.urdf", "box/box-template.urdf", "line/single-green-line-template.urdf"]
+}
+reasons: Piling or stacking balls are physically infeasible in the simulation.
+
+
+{
+    "task-name": "sweep-and-stack-blocks",
+    "task-description": "Sweep a pile of small red and blue blocks into two separate zones marked on the tabletop. Then pick up these blocks in each zone and stack them in two towers according to their colors, with the red tower higher than the blue.",
+    "assets-used": ["zone/zone.urdf", "block/small.urdf"]
+}
+reasons: Cannot do sweeping and stacking in the same task.
+
+
+=========
+Now let's design the task `build circle`. Please describe the new task `build circle` in natural languages in a clear and detailed way. Format the answer in a python dictionary with keys "task-name" and value type string with lower-case and separated by hyphens, "task-description" (one sentence and do not mention urdf paths) and value type string, and "assets-used" and value type list of strings. 
+
+Note:
+- Do not use assets that are not in the list above. 
+- Tasks that have more colors and shapes are interesting.
+- Be as specific as possible about the number, shape, and color of each asset in the task descriptions. 
+- The task need to obey physics and remain feasible.
+- Blocks and boxes are easier to stack than cylinders or balls. Specifically, you can update dimensions of a "box/box-template.urdf".
+- Try to use `box-template.urdf` for modifiable blocks instead of `block.urdf'.
+
+
+>>> Answer: 
+Here is the task description for `build circle`:
+
+```python
+{
+    "task-name": "build-circle",
+    "task-description": "Pick up six blocks of different colors (red, blue, green, yellow, orange, and purple) and place them on a tabletop in a circle arrangement. The arrangement should start with red at the top and continue clockwise in this order: blue, green, yellow, orange, and finally purple.",
+    "assets-used": ["block/block.urdf"]
+}
+```
+
+In this task, the robot is required to pick up blocks of different colors and place them in a specific arrangement on the tabletop. The block arrangement in this task is in the form of a circle, with each block representing a segment of the circle. The placement of the blocks should be done in a specific color order, starting with the red block at the top of the circle and continuing clockwise with the other colors. This task combines the skills of object manipulation, color recognition, and spatial arrangement.
+
+================= API Preview!
+
+>>> Prompt: 
+Before writing the code for the task "build-circle". Here are some APIs that are defined. Please confirm that you understand these APIs.
+
+"""
+class Task():
+    """Base Task class."""
+
+    def __init__(self):
+        self.ee = Suction
+        self.mode = 'train'
+        self.sixdof = False
+        self.primitive = primitives.PickPlace()
+        self.oracle_cams = cameras.Oracle.CONFIG
+
+        # Evaluation epsilons (for pose evaluation metric).
+        self.pos_eps = 0.01
+        self.rot_eps = np.deg2rad(15)
+
+        # Workspace bounds.
+        self.pix_size = 0.003125
+        self.bounds = np.array([[0.25, 0.75], [-0.5, 0.5], [0, 0.3]])
+        self.zone_bounds = np.copy(self.bounds)
+
+        self.goals = []
+        self.lang_goals = []
+        self.task_completed_desc = "task completed."
+        self.progress = 0
+        self._rewards = 0
+        self.assets_root = None
+
+    def reset(self, env):
+        if not self.assets_root:
+            raise ValueError('assets_root must be set for task, '
+                             'call set_assets_root().')
+        self.goals = []
+        self.lang_goals = []
+        self.progress = 0  # Task progression metric in range [0, 1].
+        self._rewards = 0  # Cumulative returned rewards.
+
+    # -------------------------------------------------------------------------
+    # Oracle Agent
+    # -------------------------------------------------------------------------
+
+    def oracle(self, env):
+        """Oracle agent."""
+        OracleAgent = collections.namedtuple('OracleAgent', ['act'])
+
+        def act(obs, info):
+            """Calculate action."""
+
+            # Oracle uses perfect RGB-D orthographic images and segmentation masks.
+            _, hmap, obj_mask = self.get_true_image(env)
+
+            # Unpack next goal step.
+            objs, matches, targs, replace, rotations, _, _, _ = self.goals[0]
+
+            # Match objects to targets without replacement.
+            if not replace:
+
+                # Modify a copy of the match matrix.
+                matches = matches.copy()
+
+                # Ignore already matched objects.
+                for i in range(len(objs)):
+                    object_id, (symmetry, _) = objs[i]
+                    pose = p.getBasePositionAndOrientation(object_id)
+                    targets_i = np.argwhere(matches[i, :]).reshape(-1)
+                    for j in targets_i:
+                        if self.is_match(pose, targs[j], symmetry):
+                            matches[i, :] = 0
+                            matches[:, j] = 0
+
+            # Get objects to be picked (prioritize farthest from nearest neighbor).
+            nn_dists = []
+            nn_targets = []
+            for i in range(len(objs)):
+                object_id, (symmetry, _) = objs[i]
+                xyz, _ = p.getBasePositionAndOrientation(object_id)
+                targets_i = np.argwhere(matches[i, :]).reshape(-1)
+                if len(targets_i) > 0:
+                    targets_xyz = np.float32([targs[j][0] for j in targets_i])
+                    dists = np.linalg.norm(
+                        targets_xyz - np.float32(xyz).reshape(1, 3), axis=1)
+                    nn = np.argmin(dists)
+                    nn_dists.append(dists[nn])
+                    nn_targets.append(targets_i[nn])
+
+                # Handle ignored objects.
+                else:
+                    nn_dists.append(0)
+                    nn_targets.append(-1)
+            order = np.argsort(nn_dists)[::-1]
+
+            # Filter out matched objects.
+            order = [i for i in order if nn_dists[i] > 0]
+
+            pick_mask = None
+            for pick_i in order:
+                pick_mask = np.uint8(obj_mask == objs[pick_i][0])
+
+                # Erode to avoid picking on edges.
+                # pick_mask = cv2.erode(pick_mask, np.ones((3, 3), np.uint8))
+
+                if np.sum(pick_mask) > 0:
+                    break
+
+            # Trigger task reset if no object is visible.
+            if pick_mask is None or np.sum(pick_mask) == 0:
+                self.goals = []
+                self.lang_goals = []
+                print('Object for pick is not visible. Skipping demonstration.')
+                return
+
+            # Get picking pose.
+            pick_prob = np.float32(pick_mask)
+            pick_pix = utils.sample_distribution(pick_prob)
+            # For "deterministic" demonstrations on insertion-easy, use this:
+            # pick_pix = (160,80)
+            pick_pos = utils.pix_to_xyz(pick_pix, hmap,
+                                        self.bounds, self.pix_size)
+            pick_pose = (np.asarray(pick_pos), np.asarray((0, 0, 0, 1)))
+
+            # Get placing pose.
+            targ_pose = targs[nn_targets[pick_i]]
+            obj_pose = p.getBasePositionAndOrientation(objs[pick_i][0])
+            if not self.sixdof:
+                obj_euler = utils.quatXYZW_to_eulerXYZ(obj_pose[1])
+                obj_quat = utils.eulerXYZ_to_quatXYZW((0, 0, obj_euler[2]))
+                obj_pose = (obj_pose[0], obj_quat)
+            world_to_pick = utils.invert(pick_pose)
+            obj_to_pick = utils.multiply(world_to_pick, obj_pose)
+            pick_to_obj = utils.invert(obj_to_pick)
+            place_pose = utils.multiply(targ_pose, pick_to_obj)
+
+            # Rotate end effector?
+            if not rotations:
+                place_pose = (place_pose[0], (0, 0, 0, 1))
+
+            place_pose = (np.asarray(place_pose[0]), np.asarray(place_pose[1]))
+
+            return {'pose0': pick_pose, 'pose1': place_pose}
+
+        return OracleAgent(act)
+
+    # -------------------------------------------------------------------------
+    # Reward Function and Task Completion Metrics
+    # -------------------------------------------------------------------------
+
+    def reward(self):
+        """Get delta rewards for current timestep.
+
+        Returns:
+          A tuple consisting of the scalar (delta) reward, plus `extras`
+            dict which has extra task-dependent info from the process of
+            computing rewards that gives us finer-grained details. Use
+            `extras` for further data analysis.
+        """
+        reward, info = 0, {}
+
+        # Unpack next goal step.
+        objs, matches, targs, _, _, metric, params, max_reward = self.goals[0]
+
+        # Evaluate by matching object poses.
+        if metric == 'pose':
+            step_reward = 0
+            for i in range(len(objs)):
+                object_id, (symmetry, _) = objs[i]
+                pose = p.getBasePositionAndOrientation(object_id)
+                targets_i = np.argwhere(matches[i, :]).reshape(-1)
+                for j in targets_i:
+                    target_pose = targs[j]
+                    if self.is_match(pose, target_pose, symmetry):
+                        step_reward += max_reward / len(objs)
+                        print(f"object {i} match with target {j} rew: {step_reward}")
+                        break
+
+        # Evaluate by measuring object intersection with zone.
+        elif metric == 'zone':
+            zone_pts, total_pts = 0, 0
+            obj_pts, zones = params
+            for zone_idx, (zone_pose, zone_size) in enumerate(zones):
+
+                # Count valid points in zone.
+                for obj_idx, obj_id in enumerate(obj_pts):
+                    pts = obj_pts[obj_id]
+                    obj_pose = p.getBasePositionAndOrientation(obj_id)
+                    world_to_zone = utils.invert(zone_pose)
+                    obj_to_zone = utils.multiply(world_to_zone, obj_pose)
+                    pts = np.float32(utils.apply(obj_to_zone, pts))
+                    if len(zone_size) > 1:
+                        valid_pts = np.logical_and.reduce([
+                            pts[0, :] > -zone_size[0] / 2, pts[0, :] < zone_size[0] / 2,
+                            pts[1, :] > -zone_size[1] / 2, pts[1, :] < zone_size[1] / 2,
+                            pts[2, :] < self.zone_bounds[2, 1]])
+
+                    # if zone_idx == matches[obj_idx].argmax():
+                    zone_pts += np.sum(np.float32(valid_pts))
+                    total_pts += pts.shape[1]
+            step_reward = max_reward * (zone_pts / total_pts)
+
+        # Get cumulative rewards and return delta.
+        reward = self.progress + step_reward - self._rewards
+        self._rewards = self.progress + step_reward
+
+        # Move to next goal step if current goal step is complete.
+        if np.abs(max_reward - step_reward) < 0.01:
+            self.progress += max_reward  # Update task progress.
+            self.goals.pop(0)
+            if len(self.lang_goals) > 0:
+                self.lang_goals.pop(0)
+
+        return reward, info
+
+    def done(self):
+        """Check if the task is done or has failed.
+
+        Returns:
+          True if the episode should be considered a success, which we
+            use for measuring successes, which is particularly helpful for tasks
+            where one may get successes on the very last time step, e.g., getting
+            the cloth coverage threshold on the last alllowed action.
+            However, for bag-items-easy and bag-items-hard (which use the
+            'bag-items' metric), it may be necessary to filter out demos that did
+            not attain sufficiently high reward in external code. Currently, this
+            is done in `main.py` and its ignore_this_demo() method.
+        """
+        return (len(self.goals) == 0) or (self._rewards > 0.99)
+        # return zone_done or defs_done or goal_done
+
+    # -------------------------------------------------------------------------
+    # Environment Helper Functions
+    # -------------------------------------------------------------------------
+
+    def is_match(self, pose0, pose1, symmetry):
+        """Check if pose0 and pose1 match within a threshold."""
+
+        # Get translational error.
+        diff_pos = np.float32(pose0[0][:2]) - np.float32(pose1[0][:2])
+        dist_pos = np.linalg.norm(diff_pos)
+
+        # Get rotational error around z-axis (account for symmetries).
+        diff_rot = 0
+        if symmetry > 0:
+            rot0 = np.array(utils.quatXYZW_to_eulerXYZ(pose0[1]))[2]
+            rot1 = np.array(utils.quatXYZW_to_eulerXYZ(pose1[1]))[2]
+            diff_rot = np.abs(rot0 - rot1) % symmetry
+            if diff_rot > (symmetry / 2):
+                diff_rot = symmetry - diff_rot
+
+        return (dist_pos < self.pos_eps) and (diff_rot < self.rot_eps)
+
+    def get_random_pose(self, env, obj_size):
+        """Get random collision-free object pose within workspace bounds."""
+
+        # Get erosion size of object in pixels.
+        max_size = np.sqrt(obj_size[0] ** 2 + obj_size[1] ** 2)
+        erode_size = int(np.round(max_size / self.pix_size))
+
+        _, hmap, obj_mask = self.get_true_image(env)
+
+        # Randomly sample an object pose within free-space pixels.
+        free = np.ones(obj_mask.shape, dtype=np.uint8)
+        for obj_ids in env.obj_ids.values():
+            for obj_id in obj_ids:
+                free[obj_mask == obj_id] = 0
+        free[0, :], free[:, 0], free[-1, :], free[:, -1] = 0, 0, 0, 0
+        free = cv2.erode(free, np.ones((erode_size, erode_size), np.uint8))
+
+        # if np.sum(free) == 0:
+        #     return None, None
+
+        if np.sum(free) == 0:
+            # avoid returning None, None
+            # return None, None
+            pix = (obj_mask.shape[0] // 2, obj_mask.shape[1] // 2)
+        else:
+            pix = utils.sample_distribution(np.float32(free))
+        pos = utils.pix_to_xyz(pix, hmap, self.bounds, self.pix_size)
+        pos = (pos[0], pos[1], obj_size[2] / 2)
+        theta = np.random.rand() * 2 * np.pi
+        rot = utils.eulerXYZ_to_quatXYZW((0, 0, theta))
+        return pos, rot
+
+    def get_lang_goal(self):
+        if len(self.lang_goals) == 0:
+            return self.task_completed_desc
+        else:
+            return self.lang_goals[0]
+
+    def get_reward(self):
+        return float(self._rewards)
+
+    # -------------------------------------------------------------------------
+    # Helper Functions
+    # -------------------------------------------------------------------------
+
+    def fill_template(self, template, replace):
+        """Read a file and replace key strings."""
+        full_template_path = os.path.join(self.assets_root, template)
+        with open(full_template_path, 'r') as file:
+            fdata = file.read()
+        for field in replace:
+            for i in range(len(replace[field])):
+                fdata = fdata.replace(f'{field}{i}', str(replace[field][i]))
+        alphabet = string.ascii_lowercase + string.digits
+        rname = ''.join(random.choices(alphabet, k=16))
+        tmpdir = tempfile.gettempdir()
+        template_filename = os.path.split(template)[-1]
+        fname = os.path.join(tmpdir, f'{template_filename}.{rname}')
+        with open(fname, 'w') as file:
+            file.write(fdata)
+        return fname
+
+    def get_random_size(self, min_x, max_x, min_y, max_y, min_z, max_z):
+        """Get random box size."""
+        size = np.random.rand(3)
+        size[0] = size[0] * (max_x - min_x) + min_x
+        size[1] = size[1] * (max_y - min_y) + min_y
+        size[2] = size[2] * (max_z - min_z) + min_z
+        return tuple(size)
+
+    def color_random_brown(self, obj):
+        shade = np.random.rand() + 0.5
+        color = np.float32([shade * 156, shade * 117, shade * 95, 255]) / 255
+        p.changeVisualShape(obj, -1, rgbaColor=color)
+
+  """""
+  
+  # Environment Class
+  def add_object(self, urdf, pose, category='rigid'):
+    """List of (fixed, rigid, or deformable) objects in env."""
+    fixed_base = 1 if category == 'fixed' else 0
+    obj_id = pybullet_utils.load_urdf(
+        p,
+        os.path.join(self.assets_root, urdf),
+        pose[0],
+        pose[1],
+        useFixedBase=fixed_base)
+    self.obj_ids[category].append(obj_id)
+    return obj_id
+"""
+
+=========
+Note that the objects need to obey physics and not collide with each other, and the object goal poses need to be above the table with lower bound x=0.25, y=-0.5 and upper bound x=0.75, y=0.5. When there are multiple objects for a multi-step pick-and-place task, there are often multiple subgoals. Once the task and environment are generated, an agent with a pick and place primitive will follow the defined goal to accomplish the tasks. 
+
+Additionally, make sure you understand and summarize the ``self.goals`` variables, which has a list of 8-tuple with (objs, matches, targ_poses, replace, rotations, metric, params, step_max_reward, symmetries).
+- objs (List of obj_id): object ID.
+- matches (Binary Matrix): a binary matrix that denotes which object is matched with which target. This matrix has dimension len(objs) x len(targs).
+- targ_poses (List of Poses [(translation, rotation)] ): a list of target poses of tuple (translation, rotation). 
+- replace (Boolean): whether each object can match with one unique target. This is important if we have one target and multiple objects. If it's set to be false, then any object matching with the target will satisfy.
+- rotations (Boolean): whether the placement action has a rotation degree of freedom. 
+- metric (`pose` or `zone`): `pose` or `zone` that the object needs to be transported to. Example: `pose`. 
+- params (List of (zone_target, zone_size)): a list of (zone_target, zone_size) for each zone if the metric is `zone`. 
+- step_max_reward (float): the total reward of matching all the objects with all the target poses. It is not dependent on the number of objects but dependent on the number of goals. 
+- symmetries: the radians that the object is symmetric around z axis.
+- language_goal: the low-level language instructions that denote the goal of this step.
+ 
+
+
+>>> Answer: 
+Yes, I understand the APIs and the task structure you've provided. 
+
+The `Task` class is the base class for defining tasks in the environment. It includes methods for resetting the task, defining the oracle agent, calculating rewards, checking task completion, and several helper functions for the environment.
+
+The `oracle` method defines an oracle agent that can perfectly execute the task. It uses perfect RGB-D orthographic images and segmentation masks to identify objects and their positions. The agent then calculates the actions required to match the objects to their targets.
+
+The `reward` method calculates the delta rewards for the current timestep. It evaluates the reward based on the matching of object poses or measuring object intersection with a zone.
+
+The `done` method checks if the task is completed or has failed. It returns True if all goals are achieved or if the cumulative rewards exceed 0.99.
+
+The `is_match` method checks if two poses match within a threshold. It calculates the translational error and rotational error around the z-axis.
+
+The `get_random_pose` method returns a random collision-free object pose within workspace bounds.
+
+The `get_lang_goal` method returns the current language goal, or a task completed message if there are no more language goals.
+
+The `get_reward` method returns the cumulative rewards.
+
+The `fill_template` method reads a file and replaces key strings.
+
+The `get_random_size` method returns a random box size.
+
+The `color_random_brown` method changes the color of an object to a random shade of brown.
+
+The `add_object` method in the Environment class adds an object to the environment. The object can be fixed, rigid, or deformable.
+
+The `self.goals` variable is a list of tuples that define the goals for the task. Each tuple includes the object IDs, a binary matrix that denotes which object is matched with which target, a list of target poses, a boolean indicating whether each object can match with one unique target, a boolean indicating whether the placement action has a rotation degree of freedom, the metric (pose or zone), a list of parameters for each zone if the metric is zone, the total reward of matching all the objects with all the target poses, and the radians that the object is symmetric around the z-axis.
+
+================= Error Book Preview!
+
+>>> Prompt: 
+Before writing the code for the task "build-circle". Here are some runtime errors that you do not want to make. Please confirm that you understand these runtime errors.
+
+"""
+- environment.py, line 338, in info
+    pos, rot = p.getBasePositionAndOrientation(obj_id)
+TypeError: an integer is required (got type NoneType)
+
+- task.py, line 118, in act
+    objs, matches, targs, replace, rotations, _, _, _ = self.goals[0]
+IndexError: list index out of range
+
+- task.py, line 308, in is_match
+    diff_pos = np.float32(pose0[0][:2]) - np.float32(pose1[0][:2])
+TypeError: 'float' object is not subscriptable
+
+- task.py", line 315, in is_match
+  rot1 = np.array(utils.quatXYZW_to_eulerXYZ(pose1[1]))[2]
+
+- utils.py", line 280, in quatXYZW_to_eulerXYZ
+  quaternion_wxyz = np.array([q[3], q[0], q[1], q[2]])
+IndexError: tuple index out of range
+
+- pallet_pose = self.get_random_pose(env, pallet_size)
+pallet_surface_height = pallet_pose[0][2]
+TypeError: 'NoneType' object is not subscriptable
+
+- No such file or directory: './cliport/environments/assets/circle/circle-template.urdf'
+
+- No such file or directory: './cliport/environments/assets/block/block-template.urdf'
+
+- task.py", line 308, in is_match
+    diff_pos = np.float32(pose0[0][:2]) - np.float32(pose1[0][:2])
+IndexError: invalid index to scalar variable.
+
+-TypeError: get_random_size() missing 4 required positional arguments: 'min_y', 'max_y', 'min_z', and 'max_z' 
+
+- task.py", line 195, in reward
+    obj_pts, zones = params
+TypeError: cannot unpack non-iterable NoneType object
+
+-  environment.py", line 230, in step
+    reward, info = self.task.reward() if action is not None else (0, {})
+  File "task.py", line 200, in reward
+    pts = obj_pts[obj_id]
+IndexError: arrays used as indices must be of integer (or boolean) type
+
+- generated_task.py", line 41, in reset
+    utils.COLORS['green'], utils.COLORS['blue'], utils.COLORS['light blue'],
+KeyError: 'light blue'
+
+- environment.py", line 195, in reset
+    self.task.reset(self)
+  File "<string>", line 38, in reset
+TypeError: can only concatenate str (not "list") to str
+
+- environment.py", line 195, in reset
+  object_shape = np.random.choice(object_shapes)
+  in numpy.random.mtrand.RandomState.choice
+ValueError: a must be 1-dimensional
+
+- No such file or directory: 'assets/box-template/box-template.urdf'
+
+- line 38, in reset.py
+{'HALF': box_size / 2}
+TypeError: unsupported operand type(s) for /: 'tuple' and 'int'. box_size is a tuple not a float.
+
+- line 38, in reset.py
+IndexError: tuple index out of range
+box_pose = (pallet_pose[0], pallet_pose[1], pallet_pose[2] + np.sum(box_sizes[:i+1]))
+
+- task.py", line 338, in fill_template
+    for i in range(len(replace[field])):
+TypeError: object of type 'float' has no len().
+
+- task.py", line 325, in get_random_pose
+    pos = (pos[0], pos[1], obj_size[2] / 2)
+IndexError: tuple index out of range
+
+- task.py", line 206, in reward
+    for zone_idx, (zone_pose, zone_size) in enumerate(zones):
+TypeError: 'NoneType' object is not iterable
+
+- task.py",
+ball_pose = self.get_random_pose(env, ball_size)
+ball_pose[0][2] += 0.02
+TypeError: 'tuple' object does not support item assignment
+"""
+
+
+You do not want to make mistakes such as
+- using assets (urdfs) that do not exist
+- use ambiguous language descriptions as goals. For instance, "place the colored blocks into the matching colored bowls" with one goal and sparse reward as the task instead of adding subgoal "place blue block into blue bowl" and give continuous reward. 
+- `matches` in the goal has wrong dimensions. It should have the same dimensions as number of objects (N) multiplied by the number of goal poses (M). Usually it is N by M.
+- have vector dimension problem such as `np.random.choice(box_size)` or `box_size / 2` where `box_size` is a tuple and not an int
+- make too large an object for stacking or make the task objects invisible for picking. 
+- accessing index out of bound `pallet_pose[2]` for `pallet_pose`.  `pallet_pose=get_random_pose` returns a tuple (translation, rotation). It does not have 3rd component. Similarly accessing `container_pose[2]` or `box_pose[2]` would cause errors as well. Since it's a tuple, try to modify it in-place will also trigger errors.
+- forget to replace str using `fill_template()` for urdfs with template such as `cylinder-template.urdf`. `ball-template.urdf`, `line-template.urf`. 
+- use `self.ee = Spatula()` as a function when doing pushing tasks, which is incorrect. It should be `self.ee = Spatula`.
+- forget to compute target poses `targ_poses` for matching. Do not use object IDs for poses.
+- change colors of complex objects such as `zone`. You can only change color of teomplate primitive such as `cylinder-template`.
+- mistakenly use `random_pose` for target pose. Design target poses based on task objectives.
+- add only one or fewer language goals which causes language-motion inconsistentcy. Note that the language goals usually are the same number as the pick and place goals.
+
+
+>>> Answer: 
+Yes, I understand the potential runtime errors you've mentioned. 
+
+These errors can occur due to various reasons such as:
+
+- Trying to perform operations on `NoneType` objects. This usually happens when a function that is expected to return a value returns `None`, often due to some error or exception in the function.
+- Index errors, which occur when trying to access an index that is out of range for a list or array. This can happen when looping over the length of an array or when hardcoding indices without checking the length of the array.
+- Type errors, which occur when an operation or function is applied to an object of inappropriate type. This can happen when trying to perform an operation that is not supported by the type of the object.
+- Key errors, which occur when trying to access a dictionary with a key that does not exist in the dictionary.
+- File not found errors, which occur when trying to open a file that does not exist or is not in the expected directory.
+- Value errors, which occur when a function receives an argument of the correct type but inappropriate value, and the situation is not dealt with by raising a more specific exception.
+- Trying to modify a tuple, which is an immutable object in Python.
+
+To avoid these errors, it's important to check the types and values of variables before performing operations on them, handle exceptions properly, and ensure that all necessary files and resources are available at the expected paths. Also, when designing tasks, it's crucial to ensure that the tasks are feasible and the goals are clearly defined.
+
+================= Code Reference!
+
+>>> Prompt: 
+Now I will provide you some reference code that might help you can write the code for the task "{'task-name': 'build-circle', 'task-description': 'Pick up six blocks of different colors (red, blue, green, yellow, orange, and purple) and place them on a tabletop in a circle arrangement. The arrangement should start with red at the top and continue clockwise in this order: blue, green, yellow, orange, and finally purple.', 'assets-used': ['block/block.urdf']}". 
+
+
+['align_box_corner.py', 'align_rope.py', 'assembling_kits.py', 'block_insertion.py', 'manipulating_rope.py', 'packing_boxes.py', 'packing_boxes_pairs.py', 'palletizing_boxes.py', 'place_red_in_green.py', 'put_block_in_bowl.py', 'separating_piles.py', 'stack_block_pyramid.py', 'sweeping_piles.py', 'towers_of_hanoi.py', 'build_wheel.py', 'rainbow_stack.py', 'connect_boxes_with_rope.py', 'build_car.py', 'manipulating_two_ropes.py', 'insert_sphere_into_container.py', 'build_bridge.py', 'stack_blocks_in_container.py', 'mix_piles.py', 'color_coordinated_block_tower.py', 'color_structured_block_tower.py', 'stack_color_coordinated_blocks.py', 'assemble_single_car.py', 'sort_and_stack_clr_blocks.py', 'create_pyramid_blocks_and_container.py', 'Four_corner_pyramid_challenge.py', 'colorful_block_tower_on_cylinder_base.py', 'corner_block_challenge.py', 'construct_corner_blocks.py', 'corner_sort_cylinders.py', 'sorting_blocks_into_pallets.py', 'sort_and_assemble_block_castle.py', 'vertical_insertion_blocks.py', 'color_coordinated_sphere_insertion.py', 'block_pyramid_with_limited_space.py', 'build_cylinder_structure.py', 'insert_blocks_lineup.py', 'color_specific_container_fill.py', 'multicolor_block_bridge.py', 'pyramid_blocks_assemble.py', 'place_ball_in_elevated_bowl.py', 'align_balls_in_colored_zones.py', 'color_coordinated_cylinder_tower.py', 'symmetric_block_bridge_construction.py', 'sphere_align_stand.py', 'construct_colorful_arch.py', 'color_sorted_container_stack.py', 'align_spheres_in_colored_zones.py', 'sort_insert_color_coordinated_blocks.py', 'color_ordered_insertion.py', 'color_coordinated_insertion.py', 'cylinder_stand_alignment.py', 'color_sorted_block_race.py', 'multi_level_block_construction.py', 'color_blocks_in_cylinder_maze.py', 'create_pyramid_with_color_coded_ells.py', 'move_piles_along_line.py', 'color_ordered_blocks_on_pallet.py', 'color_ordered_container_arrangement.py', 'multi_level_pyramid_construction.py', 'align_balls_in_colored_boxes.py', 'colored_balls_sorting_in_corner.py', 'color_coordinated_ball_insertion.py', 'color_sequenced_pyramid_packing.py', 'ball_sorting_with_blocks_barrier.py', 'color_coordinated_block_bridge.py', 'color_coordinated_cylinder_pyramid.py', 'sweep_and_sort_blocks.py', 'align_cylinders_in_zones.py', 'sphere_container_color_match.py', 'insert_ell_along_square_path.py', 'color_coordinated_box_ball_matching.py', 'cylinder_balancing_and_placement.py', 'color_coordinated_sphere_and_cylinder_assembly.py', 'sequential_block_insertion.py', 'sequential_insertion_and_stacking.py', 'color_coordinated_block_shifting.py', 'guided_block_path.py', 'mixed_color_block_barrier_insertion.py', 'ball_in_bowl_obstacle_course.py', 'ball_in_bowl_obstacle_course_new.py', 'color_coordinated_arch_construction.py', 'color_coordinated_zone_arrangement.py', 'color_coordinated_cylinder_stand_assembly.py', 'color_coordinated_ball_stacking.py', 'color_coded_blocks_on_corner.py', 'insertion_in_color_sequenced_zones.py', 'color_coordinated_zone_stacking.py', 'color_coordinated_cylinder_ball_match.py', 'multi_level_insertion_and_zone_matching.py', 'color_cued_ball_corner_sorting.py', 'cylinder_ring_stack.py', 'color_coordinated_sphere_on_pallet_pyramid.py', 'color_sequenced_sphere_placement.py', 'color_ordered_insertion_new.py', 'put_blocks_between_zones.py', 'put_blues_around_red.py', 'place_blue_on_line_ends.py', 'stack_three_layer_red_wall.py', 'block_on_cylinder_on_pallet.py', 'ball_on_box_on_container.py', 'align_rope_along_line.py', 'align_rope_cross_zone.py', 'put_kit_in_bowl.py', 'kit_in_bowl_in_zone.py', 'move_kit_from_zone_to_cylinder.py', 'move_bowl_from_pallet_to_corner.py']
+
+
+Please pick 2 task python files that you would like to use as reference. Format them in a python list. 
+
+
+>>> Answer: 
+Based on the task description, the tasks that seem most relevant are 'rainbow_stack.py' and 'color_coordinated_block_tower.py'. These tasks involve picking up blocks of different colors and arranging them in a specific order, which is similar to the 'build-circle' task. Here is the list:
+
+```python
+reference_tasks = ['rainbow_stack.py', 'color_coordinated_block_tower.py']
+```
+
+>>> Prompt: 
+Now I will provide you some reference code and you can write the code for the task "build-circle".
+
+
+"""
+import os
+
+import numpy as np
+from cliport.tasks.task import Task
+from cliport.utils import utils
+
+
+class PackingShapes(Task):
+    """pick up randomly sized shapes and place them tightly into a container."""
+
+    def __init__(self):
+        super().__init__()
+        self.max_steps = 1
+        self.homogeneous = False
+
+        self.lang_template = "pack the {obj} in the brown box"
+        self.task_completed_desc = "done packing shapes."
+        self.additional_reset()
+
+
+    def reset(self, env):
+        super().reset(env)
+
+        # Shape Names:
+        shapes = utils.assembling_kit_shapes
+
+        n_objects = 5
+        if self.mode == 'train':
+            obj_shapes = np.random.choice(self.train_set, n_objects, replace=False)
+        else:
+            if self.homogeneous:
+                obj_shapes = [np.random.choice(self.test_set, replace=False)] * n_objects
+            else:
+                obj_shapes = np.random.choice(self.test_set, n_objects, replace=False)
+
+        # Shuffle colors to avoid always picking an object of the same color
+        colors, color_names = utils.get_colors(mode=self.mode)
+
+        # Add container box.
+        zone_size = self.get_random_size(0.1, 0.15, 0.1, 0.15, 0.05, 0.05)
+        zone_pose = self.get_random_pose(env, zone_size)
+        container_template = 'container/container-template.urdf'
+        replace = {'DIM': zone_size, 'HALF': (zone_size[0] / 2, zone_size[1] / 2, zone_size[2] / 2)}
+        # IMPORTANT: REPLACE THE TEMPLATE URDF with `fill_template`
+        container_urdf = self.fill_template(container_template, replace)
+        env.add_object(container_urdf, zone_pose, 'fixed')
+
+        # Add objects.
+        objects = []
+        template = 'kitting/object-template.urdf'
+        for i in range(n_objects):
+            shape = obj_shapes[i]
+
+            # x, y, z dimensions for the asset size
+            size = (0.08, 0.08, 0.02)
+            pose= self.get_random_pose(env, size)
+            fname = f'{shape:02d}.obj'
+            fname = os.path.join(self.assets_root, 'kitting', fname)
+            scale = [0.003, 0.003, 0.001]  # .0005
+            replace = {'FNAME': (fname,),
+                       'SCALE': scale,
+                       'COLOR': colors[i]}
+
+            # IMPORTANT: REPLACE THE TEMPLATE URDF
+            urdf = self.fill_template(template, replace)
+            block_id = env.add_object(urdf, pose)
+            objects.append(block_id)
+
+        # Pick the first shape.
+        num_objects_to_pick = 1
+        for i in range(num_objects_to_pick):
+            # IMPORTANT: Specify (obj_pts, [(zone_pose, zone_size)]) for target `zone`. obj_pts is a dict
+            language_goal = self.lang_template.format(obj=shapes[obj_shapes[i]])
+            self.add_goal(objs=[objects[i]], matches=np.int32([[1]]), targ_poses=[zone_pose], replace=False,
+                rotations=True, metric='zone', params=[(zone_pose, zone_size)], step_max_reward=1 / num_objects_to_pick,
+                language_goal=language_goal)
+"""
+"""
+import numpy as np
+from cliport.tasks.task import Task
+from cliport.utils import utils
+import pybullet as p
+
+
+class PlaceRedInGreen(Task):
+    """pick up the red blocks and place them into the green bowls amidst other objects."""
+
+    def __init__(self):
+        super().__init__()
+        self.max_steps = 10
+        self.lang_template = "put the red blocks in a green bowl"
+        self.task_completed_desc = "done placing blocks in bowls."
+        self.additional_reset()
+
+    def reset(self, env):
+        super().reset(env)
+        n_bowls = np.random.randint(1, 4)
+        n_blocks = np.random.randint(1, n_bowls + 1)
+
+        # Add bowls.
+        # x, y, z dimensions for the asset size
+        bowl_size = (0.12, 0.12, 0)
+        bowl_urdf = 'bowl/bowl.urdf'
+        bowl_poses = []
+        for _ in range(n_bowls):
+            bowl_pose = self.get_random_pose(env, obj_size=bowl_size)
+            env.add_object(urdf=bowl_urdf, pose=bowl_pose, category='fixed')
+            bowl_poses.append(bowl_pose)
+
+        # Add blocks.
+        # x, y, z dimensions for the asset size
+        blocks = []
+        block_size = (0.04, 0.04, 0.04)
+        block_urdf = 'stacking/block.urdf'
+        for _ in range(n_blocks):
+            block_pose = self.get_random_pose(env, obj_size=block_size)
+            block_id = env.add_object(block_urdf, block_pose)
+            blocks.append(block_id)
+
+        # Goal: each red block is in a different green bowl.
+        self.add_goal(objs=blocks, matches=np.ones((len(blocks), len(bowl_poses))), targ_poses=bowl_poses, replace=False,
+                rotations=True, metric='pose', params=None, step_max_reward=1, language_goal=self.lang_template)
+
+        # Colors of distractor objects.
+        bowl_colors = [utils.COLORS[c] for c in utils.COLORS if c != 'green']
+        block_colors = [utils.COLORS[c] for c in utils.COLORS if c != 'red']
+
+        # Add distractors.
+        n_distractors = 0
+        while n_distractors < 6:
+            is_block = np.random.rand() > 0.5
+            urdf = block_urdf if is_block else bowl_urdf
+            size = block_size if is_block else bowl_size
+            colors = block_colors if is_block else bowl_colors
+            pose = self.get_random_pose(env, obj_size=size)
+            color = colors[n_distractors % len(colors)]
+
+            obj_id = env.add_object(urdf, pose, color=color)
+            n_distractors += 1
+"""
+"""
+import numpy as np
+from cliport.tasks import primitives
+from cliport.tasks.grippers import Spatula
+from cliport.tasks.task import Task
+from cliport.utils import utils
+
+
+class SweepingPiles(Task):
+    """Push piles of small objects into a target goal zone marked on the tabletop."""
+
+    def __init__(self):
+        super().__init__()
+        self.max_steps = 20
+        self.lang_template = "push the pile of blocks into the green square"
+        self.task_completed_desc = "done sweeping."
+        self.primitive = primitives.push
+        self.ee = Spatula
+        self.additional_reset()
+
+    def reset(self, env):
+        super().reset(env)
+
+        # Add goal zone.
+        zone_size = (0.12, 0.12, 0)
+        zone_pose = self.get_random_pose(env, zone_size)
+        env.add_object('zone/zone.urdf', zone_pose, 'fixed')
+
+        # Add pile of small blocks with `make_piles` function
+        obj_ids = self.make_piles(env)
+
+        # Add goal
+        self.add_goal(objs=obj_ids, matches=np.ones((50, 1)), targ_poses=[zone_pose], replace=True,
+                rotations=False, metric='zone', params=[(zone_pose, zone_size)], step_max_reward=1, language_goal=self.lang_template)
+"""
+"""
+import numpy as np
+from cliport.tasks.task import Task
+from cliport.utils import utils
+import pybullet as p
+
+class StackBlockPyramid(Task):
+    """Build a pyramid of colored blocks in a color sequence"""
+
+    def __init__(self):
+        super().__init__()
+        self.max_steps = 12
+        self.lang_template = "make the {row} row with {blocks}"
+        self.task_completed_desc = "done stacking block pyramid."
+        self.additional_reset()
+
+    def reset(self, env):
+        super().reset(env)
+
+        # Add base.
+        base_size = (0.05, 0.15, 0.005)
+        base_urdf = 'stacking/stand.urdf'
+        base_pose = self.get_random_pose(env, base_size)
+        env.add_object(base_urdf, base_pose, category='fixed')
+
+        # Block colors.
+        colors = [
+            utils.COLORS['purple'], utils.COLORS['blue'], utils.COLORS['green'],
+            utils.COLORS['yellow'], utils.COLORS['orange'], utils.COLORS['red']
+        ]
+
+        # Add blocks.
+        block_size = (0.04, 0.04, 0.04)
+        block_urdf = 'stacking/block.urdf'
+
+        objs = []
+        for i in range(6):
+            block_pose = self.get_random_pose(env, block_size)
+            block_id = env.add_object(block_urdf, block_pose, color=colors[i])
+            objs.append(block_id)
+
+        # IMPORTANT Associate placement locations for goals.
+        place_pos = [(0, -0.05, 0.03), (0, 0, 0.03),
+                     (0, 0.05, 0.03), (0, -0.025, 0.08),
+                     (0, 0.025, 0.08), (0, 0, 0.13)]
+        targs = [(utils.apply(base_pose, i), base_pose[1]) for i in place_pos]
+
+        # Goal: blocks are stacked in a pyramid (bottom row: green, blue, purple).
+        language_goal = self.lang_template.format(blocks="the green, blue and purple blocks", row="bottom")
+        self.add_goal(objs=objs[:3], matches=np.ones((3, 3)), targ_poses=targs[:3], replace=False,
+                rotations=True, metric='pose', params=None, step_max_reward=1 / 2, symmetries=[np.pi/2]*3, language_goal=language_goal)
+
+        # Goal: blocks are stacked in a pyramid (middle row: yellow, orange).
+        language_goal = self.lang_template.format(blocks="the yellow and orange blocks", row="middle")      
+        self.add_goal(objs=objs[3:5], matches=np.ones((2, 2)), targ_poses=targs[3:5], replace=False,
+                rotations=True, metric='pose', params=None, step_max_reward=1 / 3, symmetries=[np.pi/2]*2, language_goal=language_goal)
+
+        # Goal: blocks are stacked in a pyramid (top row: red).
+        language_goal = self.lang_template.format(blocks="the red block", row="top")
+        self.add_goal(objs=objs[5:], matches=np.ones((1, 1)), targ_poses=targs[5:], replace=False,
+                rotations=True, metric='pose', params=None, step_max_reward=1 / 6, symmetries=[np.pi/2]*1, language_goal=language_goal)
+"""
+
+
+
+Do not use libraries, functions, and assets that you don't know. For each object, try to describe its color, size, category in the task first before you write the code. You do not need extra helper functions. Comment the code liberally to explain what each piece does and why it's written that way. Use functions `make_piles` and `make_ropes` for creating piles and cables.  Note that the number of language goals usually match the number of motion goals, since they should correspond to each other.
+
+Now write the code for the task "build-circle" in python code block starting with ```python.  Reminder: TASK_STRING_TEMPLATE 
+
+
+>>> Answer: 
+```python
+import numpy as np
+from cliport.tasks.task import Task
+from cliport.utils import utils
+
+class BuildCircle(Task):
+    """Pick up six blocks of different colors (red, blue, green, yellow, orange, and purple) 
+    and place them on a tabletop in a circle arrangement. The arrangement should start with 
+    red at the top and continue clockwise in this order: blue, green, yellow, orange, and finally purple."""
+
+    def __init__(self):
+        super().__init__()
+        self.max_steps = 20
+        self.lang_template = "place the {color} block at the {position} of the circle"
+        self.task_completed_desc = "done building circle."
+        self.colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple']
+        self.positions = ['top', 'top right', 'bottom right', 'bottom', 'bottom left', 'top left']
+        self.additional_reset()
+
+    def reset(self, env):
+        super().reset(env)
+
+        # Add blocks.
+        block_size = (0.04, 0.04, 0.04)
+        block_urdf = 'block/block.urdf'
+        blocks = []
+        for i in range(6):
+            block_pose = self.get_random_pose(env, block_size)
+            block_id = env.add_object(block_urdf, block_pose, color=utils.COLORS[self.colors[i]])
+            blocks.append(block_id)
+
+        # Define target poses for the blocks in a circle arrangement.
+        radius = 0.1
+        center = (0.5, 0.5, 0)
+        angles = np.linspace(0, 2*np.pi, 7)[:-1]
+        targ_poses = [(center[0] + radius*np.cos(angle), center[1] + radius*np.sin(angle), block_size[2]/2) for angle in angles]
+        targ_poses = [(pose, (0, 0, 0, 1)) for pose in targ_poses]  # add default quaternion for orientation
+
+        # Add goals.
+        for i in range(6):
+            language_goal = self.lang_template.format(color=self.colors[i], position=self.positions[i])
+            self.add_goal(objs=[blocks[i]], matches=np.ones((1, 1)), targ_poses=[targ_poses[i]], replace=False,
+                          rotations=False, metric='pose', params=None, step_max_reward=1/6, language_goal=language_goal)
+```
+In this code, we first add six blocks of different colors to the environment. We then define the target poses for the blocks in a circle arrangement. The target poses are calculated based on the radius of the circle and the angles of the positions in the circle. We then add the goals for the task, which involve placing each block at its corresponding position in the circle. The language goal for each block is generated based on its color and position.
+
+================= TRIAL: 1

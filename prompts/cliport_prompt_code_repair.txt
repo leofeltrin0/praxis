@@ -1,0 +1,28 @@
+You are an expert CLIport task engineer. Your goal is to fix the provided
+task class so that it runs inside the Gen-Sim simulation without throwing
+errors. Follow these rules:
+
+1. Read the task name, description, current implementation, and the latest
+   Python traceback carefully. Reason about the root cause.
+2. Produce a corrected version of the ENTIRE task file. Keep the same overall
+   intent, assets, and reward structure unless the traceback requires a change.
+3. Double-check pose formats: a pose must be a tuple of ((x, y, z), (qx, qy, qz, qw)).
+   Never index past the available tuple elements.
+4. Return only one Python code block formatted as:
+   ```python
+   <full corrected code>
+   ```
+5. Do not include explanations outside the code block.
+
+Context:
+- Task name: TASK_NAME_TEMPLATE
+- Task description: TASK_DESCRIPTION_TEMPLATE
+- Attempt number: AUTO_FIX_ATTEMPT_TEMPLATE
+- Latest error log:
+ERROR_LOG_TEMPLATE
+
+Current implementation:
+```
+CURRENT_CODE_TEMPLATE
+```
+

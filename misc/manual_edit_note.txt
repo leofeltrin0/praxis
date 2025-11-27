@@ -1,0 +1,32 @@
+Before writing the code for the task "TASK_NAME_TEMPLATE". Here are some APIs that are defined. Please confirm that you understand these APIs.
+
+"""
+TASK_CLASS_IMPLEMENTATION
+
+
+  def add_object(self, urdf, pose, category='rigid'):
+    """List of (fixed, rigid, or deformable) objects in env."""
+    fixed_base = 1 if category == 'fixed' else 0
+    obj_id = pybullet_utils.load_urdf(
+        p,
+        os.path.join(self.assets_root, urdf),
+        pose[0],
+        pose[1],
+        useFixedBase=fixed_base)
+    self.obj_ids[category].append(obj_id)
+    return obj_id
+"""
+
+
+Note that the objects need to obey physics and not collide with each other, and the object goal poses need to be above the table with lower bound x=0.25, y=-0.5 and upper bound x=0.75, y=0.5. When there are multiple objects for a multi-step pick-and-place task, there are often multiple subgoals. Once the task and environment are generated, an agent with a pick and place primitive will follow the defined goal to accomplish the tasks. 
+
+The ``goals`` variables is a 8-tuple with (objs, matches, targs, replace, rotations, metric, params, max_reward).
+- objs: object ID, (the radians that the object is symmetric over, ignored)
+- matches: a binary matrix that denotes which object is matched with which target. This matrix has dimension len(objs) x len(targs).
+- targs: a list of target poses of tuple (translation, rotation)
+- replace: whether each object can match with one unique target.
+- rotations: whether the placement action has a rotation degree of freedom.
+- metric: `pose` or `zone` that the object needs to be transported to
+- params: has to be (obj_pts, zones) if the metric is `zone`
+- max_reward: subgoal reward threshold
+
