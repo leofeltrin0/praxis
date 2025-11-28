@@ -136,8 +136,60 @@ class Agent:
 
         return task_code_reference_replace_prompt
 
+    def _try_load_validated_code(self, task_name):
+        """Try to load pre-validated code for known tasks"""
+        # Map task names to their validated code files
+        validated_tasks = {
+            'build-bridge': 'build_bridge.py',
+            'build-colorful-bridge': 'color_coordinated_block_bridge.py',
+            'build-color-coordinated-bridge': 'color_coordinated_block_bridge.py',
+            'multicolor-block-bridge': 'multicolor_block_bridge.py',
+            'symmetric-block-bridge-construction': 'symmetric_block_bridge_construction.py',
+            'stack-blue-on-red': 'put_blues_around_red.py',
+            'put-blues-around-red': 'put_blues_around_red.py',
+            'align-spheres-in-colored-zones': 'align_spheres_in_colored_zones.py',
+            'insert-sphere-into-container': 'insert_sphere_into_container.py',
+            'stack-blocks-in-container': 'stack_blocks_in_container.py',
+            'align-balls-in-colored-zones': 'align_balls_in_colored_zones.py',
+            'align-balls-in-colored-boxes': 'align_balls_in_colored_boxes.py',
+            'color-sorted-container-stack': 'color_sorted_container_stack.py',
+            'rainbow-stack': 'rainbow_stack.py',
+        }
+        
+        # Normalize task name (handle both formats)
+        normalized_name = task_name.lower().replace('_', '-')
+        
+        # Check if we have a validated version
+        if normalized_name in validated_tasks:
+            code_file = validated_tasks[normalized_name]
+            code_path = os.path.join('cliport/generated_tasks', code_file)
+            if os.path.exists(code_path):
+                print(f"Using pre-validated code for {task_name}: {code_file}")
+                add_to_txt(self.chat_log, f"Using pre-validated code: {code_file}", with_print=True)
+                with open(code_path, 'r') as f:
+                    code = f.read()
+                # Extract class name from code
+                class_match = None
+                for line in code.split('\n'):
+                    if 'class ' in line and '(Task)' in line:
+                        class_match = line
+                        break
+                if class_match:
+                    task_name_from_code = class_match[class_match.find('class ') + 6:class_match.rfind('(Task)')].strip()
+                    return code, task_name_from_code
+        return None, None
+
     def implement_task(self):
         """Generate Code for the task"""
+        # First, try to load pre-validated code for known tasks
+        task_name = self.new_task.get("task-name", "")
+        validated_code, validated_task_name = self._try_load_validated_code(task_name)
+        if validated_code:
+            print("Save code to:", self.model_output_dir, validated_task_name + "_code_output")
+            save_text(self.model_output_dir, validated_task_name + "_code_output", validated_code)
+            return validated_code, validated_task_name
+        
+        # If no validated code, generate new code
         code_prompt_text = open(f"{self.prompt_folder}/cliport_prompt_code_split_template.txt").read()
         code_prompt_text = code_prompt_text.replace("TASK_NAME_TEMPLATE", self.new_task["task-name"])
 

@@ -244,4 +244,6 @@ class StackBlockPyramid(Task):
 
 Do not use libraries, functions, and assets that you don't know. For each object, try to describe its color, size, category in the task first before you write the code. You do not need extra helper functions. Comment the code liberally to explain what each piece does and why it's written that way. Use functions `make_piles` and `make_ropes` for creating piles and cables.  Note that the number of language goals usually match the number of motion goals, since they should correspond to each other.
 
+IMPORTANT: Study the reference code examples above carefully. Your generated code should follow the same structure, complexity, and level of detail as those examples. If the task description mentions multiple steps, objects, or complex arrangements (like bridges, pyramids, or multi-object sequences), your code MUST implement ALL of those elements, not just a simplified version. Match the complexity of the reference examples.
+
 Now write the code for the task "TASK_NAME_TEMPLATE" in python code block starting with ```python.  Reminder: TASK_STRING_TEMPLATE 
