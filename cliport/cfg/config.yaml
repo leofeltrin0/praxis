@@ -12,6 +12,11 @@ model_output_dir: '' # to be filled in with date
 gpt_model: "gpt-4-0613" # which openai gpt model to use
 openai_key: ${oc.env:OPENAI_KEY}
 auto_fix_attempts: 2 # number of automatic LLM repair attempts after a failure
+pose_validation:
+  enabled: true
+  max_retries: 1
+  xy_bounds: [0.05, 0.95]
+  z_bounds: [0.0, 0.5]
 
 # Advanced options
 task_description_candidate_num: -1 # the number of sample task descriptions. -1 means all 

@@ -15,6 +15,7 @@ import time
 import random
 import json
 import traceback
+import re
 from gensim.utils import (
     mkdir_if_missing,
     save_text,
@@ -24,6 +25,10 @@ from gensim.utils import (
 )
 import pybullet as p
 from gensim.code_fixer import attempt_code_repair
+
+POSE_PATTERN = re.compile(
+    r"\(\s*\(\s*([-+0-9.eE]+)\s*,\s*([-+0-9.eE]+)\s*,\s*([-+0-9.eE]+)\s*\)\s*,\s*\(\s*([-+0-9.eE]+)\s*,\s*([-+0-9.eE]+)\s*,\s*([-+0-9.eE]+)\s*,\s*([-+0-9.eE]+)\s*\)\s*\)"
+)
 
 class SimulationRunner:
     """ the main class that runs simulation loop """
@@ -52,6 +57,13 @@ class SimulationRunner:
         self.generated_tasks = []
         self.passed_tasks = [] # accepted ones
         self.auto_fix_attempts = cfg.get('auto_fix_attempts', 0)
+        pose_validation_cfg = cfg.get('pose_validation', {})
+        self.pose_validation_enabled = pose_validation_cfg.get('enabled', False)
+        self.pose_validation_max_retries = pose_validation_cfg.get('max_retries', 0)
+        xy_bounds = pose_validation_cfg.get('xy_bounds', [0.0, 1.0])
+        z_bounds = pose_validation_cfg.get('z_bounds', [0.0, 1.0])
+        self.pose_xy_bounds = (xy_bounds[0], xy_bounds[1])
+        self.pose_z_bounds = (z_bounds[0], z_bounds[1])
 
     def print_current_stats(self):
         """ print the current statistics of the simulation design """
@@ -97,6 +109,11 @@ class SimulationRunner:
         new_code, new_task_name = fix
         if not new_code:
             return False
+        is_valid, reason = self._validate_generated_code(new_code)
+        if not is_valid:
+            print("Auto-fix rejected due to invalid pose:", reason)
+            self.log = self._format_html_traceback(reason)
+            return False
 
         self.generated_code = new_code
         if new_task_name:
@@ -111,6 +128,36 @@ class SimulationRunner:
             new_code,
         )
         return True
+
+    def _validate_generated_code(self, code: str):
+        if not self.pose_validation_enabled:
+            return True, ""
+
+        matches = POSE_PATTERN.findall(code)
+        if not matches:
+            return True, ""
+
+        invalid_entries = []
+        for pose in matches:
+            try:
+                x, y, z = map(float, pose[:3])
+            except ValueError:
+                continue
+            if not (self.pose_xy_bounds[0] <= x <= self.pose_xy_bounds[1]):
+                invalid_entries.append(f"x={x:.3f} fora dos limites {self.pose_xy_bounds}")
+            if not (self.pose_xy_bounds[0] <= y <= self.pose_xy_bounds[1]):
+                invalid_entries.append(f"y={y:.3f} fora dos limites {self.pose_xy_bounds}")
+            if not (self.pose_z_bounds[0] <= z <= self.pose_z_bounds[1]):
+                invalid_entries.append(f"z={z:.3f} fora dos limites {self.pose_z_bounds}")
+
+            if len(invalid_entries) >= 3:
+                break
+
+        if invalid_entries:
+            reason = "Validação de pose falhou: " + "; ".join(invalid_entries)
+            return False, reason
+
+        return True, ""
 
     def example_task_creation(self):
         """ create the task through interactions of agent and critic """
@@ -180,7 +227,27 @@ class SimulationRunner:
             yield "Tarefa gerada ==> Asset gerado ==> API revisada ==> ", "", None, None
             self.critic.error_review(self.generated_task)
             yield "Tarefa gerada ==> Asset gerado ==> API revisada ==> Erros revisados ==> ", "", None, None
-            self.generated_code, self.curr_task_name = self.agent.implement_task()
+
+            max_pose_retries = self.pose_validation_max_retries if self.pose_validation_enabled else 0
+            validation_attempts = 0
+            pose_status = "Tarefa gerada ==> Asset gerado ==> API revisada ==> Erros revisados ==> Validacao de pose falhou"
+
+            while True:
+                self.generated_code, self.curr_task_name = self.agent.implement_task()
+                is_valid, reason = self._validate_generated_code(self.generated_code)
+                if is_valid:
+                    break
+
+                validation_attempts += 1
+                reason_html = self._format_html_traceback(reason)
+                self.log = reason_html
+                print("Pose validation failed:", reason)
+                yield pose_status + f" ==> Nova tentativa {validation_attempts}", reason_html, self.generated_code, None
+
+                if validation_attempts > max_pose_retries:
+                    raise RuntimeError(reason)
+
+            self.log = ""
             self.task_asset_logs.append(self.generated_task["assets-used"])
             self.generated_task_name = self.generated_task["task-name"]
             print("generated_code\n", self.generated_code)

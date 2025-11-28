@@ -1,3 +1,17 @@
+---
+hf_python_version: 3.10.0
+title: GenSim
+emoji: 📈
+colorFrom: purple
+colorTo: indigo
+sdk: gradio
+python_version: 3.10.0
+sdk_version: 6.0.0
+app_file: app.py
+pinned: false
+license: apache-2.0
+---
+
 ## Preparations
 1. Obtain an [OpenAI API Key](https://openai.com/blog/openai-api/)
 
